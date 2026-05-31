@@ -1,8 +1,23 @@
 "use strict";
+var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
+    if (kind === "m") throw new TypeError("Private method is not writable");
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+    return (kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value)), value;
+};
+var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (receiver, state, kind, f) {
+    if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+    if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+    return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function")
+        r = Reflect.decorate(decorators, target, key, desc);
+    else
+        for (var i = decorators.length - 1; i >= 0; i--)
+            if (d = decorators[i])
+                r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 var Il2Cpp;
@@ -994,7 +1009,6 @@ function lazy(_, propertyKey, descriptor) {
 }
 /** Scaffold class. */
 class NativeStruct {
-    handle;
     constructor(handleOrWrapper) {
         if (handleOrWrapper instanceof NativePointer) {
             this.handle = handleOrWrapper;
@@ -1018,7 +1032,7 @@ function addFlippedEntries(obj) {
     return Object.keys(obj).reduce((obj, key) => ((obj[obj[key]] = key), obj), obj);
 }
 NativePointer.prototype.offsetOf = function (condition, depth) {
-    depth ??= 512;
+    depth ?? (depth = 512);
     for (let i = 0; depth > 0 ? i < depth : i < -depth; i++) {
         if (condition(depth > 0 ? this.add(i) : this.sub(i))) {
             return i;
@@ -1308,8 +1322,16 @@ var Il2Cpp;
         // initialization is not completed yet.
         if (Il2Cpp.exports.getCorlib().isNull()) {
             return await new Promise(resolve => {
+                const timeout = setTimeout(() => {
+                    if (!Il2Cpp.exports.getCorlib().isNull()) {
+                        warn(`resuming execution despite IL2CPP initialization not being captured in time, please open an issue as this is suboptimal`);
+                        interceptor.detach();
+                        resolve(false);
+                    }
+                }, 1000);
                 const interceptor = Interceptor.attach(Il2Cpp.exports.initialize, {
                     onLeave() {
+                        clearTimeout(timeout);
                         interceptor.detach();
                         blocking ? resolve(true) : setImmediate(() => resolve(false));
                     }
@@ -1323,8 +1345,8 @@ var Il2Cpp;
         const [moduleName, fallback] = getExpectedModuleNames();
         return (Process.findModuleByName(moduleName) ??
             Process.findModuleByName(fallback ?? moduleName) ??
-            (Process.platform == "darwin" ? Process.findModuleByAddress(DebugSymbol.fromName("il2cpp_init").address) : undefined)
-            ?? undefined);
+            (Process.platform == "darwin" ? Process.findModuleByAddress(DebugSymbol.fromName("il2cpp_init").address) : undefined) ??
+            undefined);
     }
     function getExpectedModuleNames() {
         if (Il2Cpp.$config.moduleName) {
@@ -1340,6 +1362,35 @@ var Il2Cpp;
         }
         raise(`${Process.platform} is not supported yet`);
     }
+})(Il2Cpp || (Il2Cpp = {}));
+var Il2Cpp;
+(function (Il2Cpp) {
+    function nullable(valueOrNull, klass) {
+        const actualClass = typeof valueOrNull == "boolean"
+            ? Il2Cpp.corlib.class("System.Boolean")
+            : typeof valueOrNull == "number"
+                ? (klass ?? Il2Cpp.corlib.class("System.Int32"))
+                : valueOrNull instanceof Int64
+                    ? Il2Cpp.corlib.class("System.Int64")
+                    : valueOrNull instanceof UInt64
+                        ? Il2Cpp.corlib.class("System.UInt64")
+                        : valueOrNull instanceof NativePointer
+                            ? (klass ?? Il2Cpp.corlib.class("System.IntPtr"))
+                            : valueOrNull instanceof Il2Cpp.ValueType
+                                ? valueOrNull.type.class
+                                : (klass ?? raise(`A class must be specified when constructing a nullable for value '${valueOrNull}'`));
+        if (actualClass.isValueType == false) {
+            raise(`Cannot create nullable value type out of a reference type '${actualClass.type.name}'`);
+        }
+        const inflatedClass = Il2Cpp.corlib.class("System.Nullable`1").inflate(actualClass);
+        const struct = new Il2Cpp.ValueType(Memory.alloc(inflatedClass.valueTypeSize), inflatedClass.type);
+        (struct.tryField("hasValue") ?? struct.field("has_value")).value = valueOrNull != null;
+        if (valueOrNull != null) {
+            struct.field("value").value = valueOrNull;
+        }
+        return struct;
+    }
+    Il2Cpp.nullable = nullable;
 })(Il2Cpp || (Il2Cpp = {}));
 var Il2Cpp;
 (function (Il2Cpp) {
@@ -1374,116 +1425,117 @@ var Il2Cpp;
 })(Il2Cpp || (Il2Cpp = {}));
 var Il2Cpp;
 (function (Il2Cpp) {
+    var _Tracer_state, _Tracer_threadId, _Tracer_verbose, _Tracer_applier, _Tracer_targets, _Tracer_domain, _Tracer_assemblies, _Tracer_classes, _Tracer_methods, _Tracer_assemblyFilter, _Tracer_classFilter, _Tracer_methodFilter, _Tracer_parameterFilter;
     class Tracer {
-        /** @internal */
-        #state = {
-            depth: 0,
-            buffer: [],
-            history: new Set(),
-            flush: () => {
-                if (this.#state.depth == 0) {
-                    const message = `\n${this.#state.buffer.join("\n")}\n`;
-                    if (this.#verbose) {
-                        inform(message);
-                    }
-                    else {
-                        const hash = cyrb53(message);
-                        if (!this.#state.history.has(hash)) {
-                            this.#state.history.add(hash);
+        constructor(applier) {
+            /** @internal */
+            _Tracer_state.set(this, {
+                depth: 0,
+                buffer: [],
+                history: new Set(),
+                flush: () => {
+                    if (__classPrivateFieldGet(this, _Tracer_state, "f").depth == 0) {
+                        const message = `\n${__classPrivateFieldGet(this, _Tracer_state, "f").buffer.join("\n")}\n`;
+                        if (__classPrivateFieldGet(this, _Tracer_verbose, "f")) {
                             inform(message);
                         }
+                        else {
+                            const hash = cyrb53(message);
+                            if (!__classPrivateFieldGet(this, _Tracer_state, "f").history.has(hash)) {
+                                __classPrivateFieldGet(this, _Tracer_state, "f").history.add(hash);
+                                inform(message);
+                            }
+                        }
+                        __classPrivateFieldGet(this, _Tracer_state, "f").buffer.length = 0;
                     }
-                    this.#state.buffer.length = 0;
                 }
-            }
-        };
-        /** @internal */
-        #threadId = Il2Cpp.mainThread.id;
-        /** @internal */
-        #verbose = false;
-        /** @internal */
-        #applier;
-        /** @internal */
-        #targets = [];
-        /** @internal */
-        #domain;
-        /** @internal */
-        #assemblies;
-        /** @internal */
-        #classes;
-        /** @internal */
-        #methods;
-        /** @internal */
-        #assemblyFilter;
-        /** @internal */
-        #classFilter;
-        /** @internal */
-        #methodFilter;
-        /** @internal */
-        #parameterFilter;
-        constructor(applier) {
-            this.#applier = applier;
+            });
+            /** @internal */
+            _Tracer_threadId.set(this, Il2Cpp.mainThread.id);
+            /** @internal */
+            _Tracer_verbose.set(this, false);
+            /** @internal */
+            _Tracer_applier.set(this, void 0);
+            /** @internal */
+            _Tracer_targets.set(this, []);
+            /** @internal */
+            _Tracer_domain.set(this, void 0);
+            /** @internal */
+            _Tracer_assemblies.set(this, void 0);
+            /** @internal */
+            _Tracer_classes.set(this, void 0);
+            /** @internal */
+            _Tracer_methods.set(this, void 0);
+            /** @internal */
+            _Tracer_assemblyFilter.set(this, void 0);
+            /** @internal */
+            _Tracer_classFilter.set(this, void 0);
+            /** @internal */
+            _Tracer_methodFilter.set(this, void 0);
+            /** @internal */
+            _Tracer_parameterFilter.set(this, void 0);
+            __classPrivateFieldSet(this, _Tracer_applier, applier, "f");
         }
         /** */
         thread(thread) {
-            this.#threadId = thread.id;
+            __classPrivateFieldSet(this, _Tracer_threadId, thread.id, "f");
             return this;
         }
         /** Determines whether print duplicate logs. */
         verbose(value) {
-            this.#verbose = value;
+            __classPrivateFieldSet(this, _Tracer_verbose, value, "f");
             return this;
         }
         /** Sets the application domain as the place where to find the target methods. */
         domain() {
-            this.#domain = Il2Cpp.domain;
+            __classPrivateFieldSet(this, _Tracer_domain, Il2Cpp.domain, "f");
             return this;
         }
         /** Sets the passed `assemblies` as the place where to find the target methods. */
         assemblies(...assemblies) {
-            this.#assemblies = assemblies;
+            __classPrivateFieldSet(this, _Tracer_assemblies, assemblies, "f");
             return this;
         }
         /** Sets the passed `classes` as the place where to find the target methods. */
         classes(...classes) {
-            this.#classes = classes;
+            __classPrivateFieldSet(this, _Tracer_classes, classes, "f");
             return this;
         }
         /** Sets the passed `methods` as the target methods. */
         methods(...methods) {
-            this.#methods = methods;
+            __classPrivateFieldSet(this, _Tracer_methods, methods, "f");
             return this;
         }
         /** Filters the assemblies where to find the target methods. */
         filterAssemblies(filter) {
-            this.#assemblyFilter = filter;
+            __classPrivateFieldSet(this, _Tracer_assemblyFilter, filter, "f");
             return this;
         }
         /** Filters the classes where to find the target methods. */
         filterClasses(filter) {
-            this.#classFilter = filter;
+            __classPrivateFieldSet(this, _Tracer_classFilter, filter, "f");
             return this;
         }
         /** Filters the target methods. */
         filterMethods(filter) {
-            this.#methodFilter = filter;
+            __classPrivateFieldSet(this, _Tracer_methodFilter, filter, "f");
             return this;
         }
         /** Filters the target methods. */
         filterParameters(filter) {
-            this.#parameterFilter = filter;
+            __classPrivateFieldSet(this, _Tracer_parameterFilter, filter, "f");
             return this;
         }
         /** Commits the current changes by finding the target methods. */
         and() {
             const filterMethod = (method) => {
-                if (this.#parameterFilter == undefined) {
-                    this.#targets.push(method);
+                if (__classPrivateFieldGet(this, _Tracer_parameterFilter, "f") == undefined) {
+                    __classPrivateFieldGet(this, _Tracer_targets, "f").push(method);
                     return;
                 }
                 for (const parameter of method.parameters) {
-                    if (this.#parameterFilter(parameter)) {
-                        this.#targets.push(method);
+                    if (__classPrivateFieldGet(this, _Tracer_parameterFilter, "f").call(this, parameter)) {
+                        __classPrivateFieldGet(this, _Tracer_targets, "f").push(method);
                         break;
                     }
                 }
@@ -1494,12 +1546,12 @@ var Il2Cpp;
                 }
             };
             const filterClass = (klass) => {
-                if (this.#methodFilter == undefined) {
+                if (__classPrivateFieldGet(this, _Tracer_methodFilter, "f") == undefined) {
                     filterMethods(klass.methods);
                     return;
                 }
                 for (const method of klass.methods) {
-                    if (this.#methodFilter(method)) {
+                    if (__classPrivateFieldGet(this, _Tracer_methodFilter, "f").call(this, method)) {
                         filterMethod(method);
                     }
                 }
@@ -1510,12 +1562,12 @@ var Il2Cpp;
                 }
             };
             const filterAssembly = (assembly) => {
-                if (this.#classFilter == undefined) {
+                if (__classPrivateFieldGet(this, _Tracer_classFilter, "f") == undefined) {
                     filterClasses(assembly.image.classes);
                     return;
                 }
                 for (const klass of assembly.image.classes) {
-                    if (this.#classFilter(klass)) {
+                    if (__classPrivateFieldGet(this, _Tracer_classFilter, "f").call(this, klass)) {
                         filterClass(klass);
                     }
                 }
@@ -1526,40 +1578,40 @@ var Il2Cpp;
                 }
             };
             const filterDomain = (domain) => {
-                if (this.#assemblyFilter == undefined) {
+                if (__classPrivateFieldGet(this, _Tracer_assemblyFilter, "f") == undefined) {
                     filterAssemblies(domain.assemblies);
                     return;
                 }
                 for (const assembly of domain.assemblies) {
-                    if (this.#assemblyFilter(assembly)) {
+                    if (__classPrivateFieldGet(this, _Tracer_assemblyFilter, "f").call(this, assembly)) {
                         filterAssembly(assembly);
                     }
                 }
             };
-            this.#methods
-                ? filterMethods(this.#methods)
-                : this.#classes
-                    ? filterClasses(this.#classes)
-                    : this.#assemblies
-                        ? filterAssemblies(this.#assemblies)
-                        : this.#domain
-                            ? filterDomain(this.#domain)
+            __classPrivateFieldGet(this, _Tracer_methods, "f")
+                ? filterMethods(__classPrivateFieldGet(this, _Tracer_methods, "f"))
+                : __classPrivateFieldGet(this, _Tracer_classes, "f")
+                    ? filterClasses(__classPrivateFieldGet(this, _Tracer_classes, "f"))
+                    : __classPrivateFieldGet(this, _Tracer_assemblies, "f")
+                        ? filterAssemblies(__classPrivateFieldGet(this, _Tracer_assemblies, "f"))
+                        : __classPrivateFieldGet(this, _Tracer_domain, "f")
+                            ? filterDomain(__classPrivateFieldGet(this, _Tracer_domain, "f"))
                             : undefined;
-            this.#assemblies = undefined;
-            this.#classes = undefined;
-            this.#methods = undefined;
-            this.#assemblyFilter = undefined;
-            this.#classFilter = undefined;
-            this.#methodFilter = undefined;
-            this.#parameterFilter = undefined;
+            __classPrivateFieldSet(this, _Tracer_assemblies, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_classes, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_methods, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_assemblyFilter, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_classFilter, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_methodFilter, undefined, "f");
+            __classPrivateFieldSet(this, _Tracer_parameterFilter, undefined, "f");
             return this;
         }
         /** Starts tracing. */
         attach() {
-            for (const target of this.#targets) {
+            for (const target of __classPrivateFieldGet(this, _Tracer_targets, "f")) {
                 if (!target.virtualAddress.isNull()) {
                     try {
-                        this.#applier(target, this.#state, this.#threadId);
+                        __classPrivateFieldGet(this, _Tracer_applier, "f").call(this, target, __classPrivateFieldGet(this, _Tracer_state, "f"), __classPrivateFieldGet(this, _Tracer_threadId, "f"));
                     }
                     catch (e) {
                         switch (e.message) {
@@ -1574,6 +1626,7 @@ var Il2Cpp;
             }
         }
     }
+    _Tracer_state = new WeakMap(), _Tracer_threadId = new WeakMap(), _Tracer_verbose = new WeakMap(), _Tracer_applier = new WeakMap(), _Tracer_targets = new WeakMap(), _Tracer_domain = new WeakMap(), _Tracer_assemblies = new WeakMap(), _Tracer_classes = new WeakMap(), _Tracer_methods = new WeakMap(), _Tracer_assemblyFilter = new WeakMap(), _Tracer_classFilter = new WeakMap(), _Tracer_methodFilter = new WeakMap(), _Tracer_parameterFilter = new WeakMap();
     Il2Cpp.Tracer = Tracer;
     /** */
     function trace(parameters = false) {
@@ -1680,10 +1733,12 @@ var Il2Cpp;
             // We previosly obtained an array whose content is known by calling
             // 'System.String::Split(NULL)' on a known string. However, that
             // method invocation somehow blows things up in Unity 2018.3.0f1.
-            const array = Il2Cpp.string("v").object.method("ToCharArray", 0).invoke();
+            //
+            // See https://github.com/vfsfitvnm/frida-il2cpp-bridge/pull/717
+            const array = Il2Cpp.string("vfsfitvnm").object.method("ToCharArray", 0).invoke();
             // prettier-ignore
-            const offset = array.handle.offsetOf(_ => _.readS16() == 118) ??
-                raise("couldn't find the elements offset in the native array struct");
+            const offset = Memory.scanSync(array.handle, 0xff, "76 00 66 00 73 00 66 00 69 00 74 00 76 00 6e 00 6d 00")[0]?.address?.sub(array.handle)
+                ?? raise("couldn't find the elements offset in the native array struct");
             // prettier-ignore
             getter(Il2Cpp.Array.prototype, "elements", function () {
                 return new Il2Cpp.Pointer(this.handle.add(offset), this.elementType);
@@ -2406,7 +2461,6 @@ ${this.isThreadStatic || this.isLiteral ? `` : ` // 0x${this.offset.toString(16)
 var Il2Cpp;
 (function (Il2Cpp) {
     class GCHandle {
-        handle;
         /** @internal */
         constructor(handle) {
             this.handle = handle;
@@ -2569,7 +2623,7 @@ var Il2Cpp;
         }
         /** Gets the generic parameters of this generic method. */
         get generics() {
-            if (!this.isGeneric && !this.isInflated) {
+            if (!this.isGeneric) {
                 return [];
             }
             const types = this.object.method("GetGenericArguments").invoke();
@@ -3096,11 +3150,7 @@ var Il2Cpp;
         }
         /** */
         toString() {
-            try {
-                return this.isNull() ? "null" : this.method<Il2Cpp.String>("ToString", 0).invoke().content ?? "null";
-            } catch (error) {
-                return "Error: ToString failed";
-            }
+            return this.isNull() ? "null" : this.method("ToString", 0).invoke().content ?? "null";
         }
         /** Unboxes the value type (either a primitive, a struct or an enum) out of this object. */
         unbox() {
@@ -3125,7 +3175,6 @@ var Il2Cpp;
     Il2Cpp.Object = Object;
     (function (Object) {
         class Monitor {
-            handle;
             /** @internal */
             constructor(/** @internal */ handle) {
                 this.handle = handle;
@@ -3165,12 +3214,6 @@ var Il2Cpp;
 var Il2Cpp;
 (function (Il2Cpp) {
     class Parameter {
-        /** Name of this parameter. */
-        name;
-        /** Position of this parameter. */
-        position;
-        /** Type of this parameter. */
-        type;
         constructor(name, position, type) {
             this.name = name;
             this.position = position;
@@ -3186,7 +3229,6 @@ var Il2Cpp;
 var Il2Cpp;
 (function (Il2Cpp) {
     class Pointer extends NativeStruct {
-        type;
         constructor(handle, type) {
             super(handle);
             this.type = type;
@@ -3223,7 +3265,6 @@ var Il2Cpp;
 var Il2Cpp;
 (function (Il2Cpp) {
     class Reference extends NativeStruct {
-        type;
         constructor(handle, type) {
             super(handle);
             this.type = type;
@@ -3470,16 +3511,36 @@ var Il2Cpp;
             const currentThreadHandle = Il2Cpp.currentThread?.handle ?? raise("Current thread is not attached to IL2CPP");
             const pattern = currentThreadHandle.toMatchPattern();
             const threads = [];
+
             for (const range of Process.enumerateRanges("rw-")) {
                 if (range.file == undefined) {
-                    const matches = Memory.scanSync(range.base, range.size, pattern);
+                    let matches;
+                    try {
+                        matches = Memory.scanSync(range.base, range.size, pattern);
+                    } catch (_) {
+                        // Region became inaccessible mid-scan, skip it
+                        continue;
+                    }
+
                     if (matches.length == 1) {
                         while (true) {
-                            const handle = matches[0].address.sub(matches[0].size * threads.length).readPointer();
-                            if (handle.isNull() || !handle.readPointer().equals(currentThreadHandle.readPointer())) {
+                            try {
+                                const handle = matches[0].address
+                                    .sub(matches[0].size * threads.length)
+                                    .readPointer();
+
+                                if (handle.isNull()) break;
+
+                                const vtable = handle.readPointer();
+                                const currentVtable = currentThreadHandle.readPointer();
+
+                                if (!vtable.equals(currentVtable)) break;
+
+                                threads.unshift(new Il2Cpp.Thread(handle));
+                            } catch (_) {
+                                // Pointer dereferenced into a guard/inaccessible page
                                 break;
                             }
-                            threads.unshift(new Il2Cpp.Thread(handle));
                         }
                         break;
                     }
@@ -3626,16 +3687,12 @@ var Il2Cpp;
         }
         /** Gets the name of this type. */
         get name() {
-            try {
-                const handle = Il2Cpp.exports.typeGetName(this);
+            const handle = Il2Cpp.exports.typeGetName(this);
             try {
                 return handle.readUtf8String();
             }
             finally {
                 Il2Cpp.free(handle);
-            }
-            } catch {
-                return "Error: ToString failed"
             }
         }
         /** Gets the encompassing object of the current type. */
@@ -3689,7 +3746,6 @@ var Il2Cpp;
 var Il2Cpp;
 (function (Il2Cpp) {
     class ValueType extends NativeStruct {
-        type;
         constructor(handle, type) {
             super(handle);
             this.type = type;
@@ -3773,6 +3829,7 @@ var Il2Cpp;
 /// <reference path="./gc.ts">/>
 /// <reference path="./memory.ts">/>
 /// <reference path="./module.ts">/>
+/// <reference path="./nullable.ts">/>
 /// <reference path="./perform.ts">/>
 /// <reference path="./tracer.ts">/>
 /// <reference path="./structs/array.ts">/>
@@ -3794,4 +3851,3 @@ var Il2Cpp;
 /// <reference path="./structs/type.ts">/>
 /// <reference path="./structs/value-type.ts">/>
 globalThis.Il2Cpp = Il2Cpp;
-//# sourceMappingURL=index.js.map

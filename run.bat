@@ -1,1 +1,1 @@
-frida -U -l frida-il2cpp-bridge.js -l gtag.ts "Gorilla Tag"
+frida -l frida-il2cpp-bridge.js -l exports.ts -l cfg.ts -l ac.ts "AnimalCompany.exe"
